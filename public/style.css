@@ -1,0 +1,235 @@
+/* public/style.css */
+:root {
+    --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.8);
+    --text-main: #2d3436;
+    --text-light: #636e72;
+    --accent: #0984e3;
+    --accent-hover: #74b9ff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+/* Visibility toggles for our Single Page App */
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+.hidden { display: none !important; }
+
+/* Glassmorphism Utilities */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+/* Buttons and Inputs */
+input, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.9);
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1);
+}
+
+textarea {
+    resize: none;
+    height: 100px;
+}
+
+.primary-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.primary-btn:hover { background: var(--accent-hover); }
+
+/* --- Authentication Screen --- */
+#auth-section {
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.error-text {
+    color: #d63031;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+/* --- Main Application Layout --- */
+.glass-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 5%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.user-badge {
+    background: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    padding: 30px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Sidebar */
+.scrollable-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 12px;
+}
+
+.follow-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.follow-btn.following {
+    background: var(--accent);
+    color: white;
+}
+
+/* Feed */
+.create-post {
+    margin-bottom: 30px;
+}
+
+.post-card {
+    background: var(--glass-bg);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.post-header {
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--accent);
+}
+
+.post-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.action-btn:hover, .action-btn.liked {
+    color: var(--accent);
+}
+
+.comments-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed rgba(0,0,0,0.1);
+}
+
+.comment {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 8px;
+}
+
+.comment-input-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.comment-input-wrapper input {
+    margin: 0;
+    padding: 8px 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
