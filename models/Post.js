@@ -1,7 +1,6 @@
 // models/Post.js
 const mongoose = require('mongoose');
 
-// We can embed comments directly into the post for a mini-app to keep queries fast
 const commentSchema = new mongoose.Schema({
     text: { type: String, required: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -9,16 +8,26 @@ const commentSchema = new mongoose.Schema({
 });
 
 const postSchema = new mongoose.Schema({
+    // Caption — optional now (user might post media with no text)
     content: { 
         type: String, 
-        required: true 
+        default: ''
     },
     author: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User',
         required: true
     },
-    // The like system stores the IDs of users who liked the post
+    // Media attachment (image, video, or audio)
+    media: {
+        url: { type: String, default: null },
+        type: { 
+            type: String, 
+            enum: ['image', 'video', 'audio', null], 
+            default: null 
+        },
+        originalName: { type: String, default: null }
+    },
     likes: [{ 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User' 

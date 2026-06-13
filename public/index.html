@@ -3,47 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Social</title>
+    <title>Oasis — Social Network</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- ── AUTH SCREEN ── -->
     <div id="auth-section" class="screen active">
         <div class="glass-card auth-card">
-            <h1>Join the Network</h1>
-            <p>Enter a username to start connecting.</p>
-            <input type="text" id="username-input" placeholder="e.g., moataz_dev">
-            <button id="login-btn" class="primary-btn">Enter</button>
+            <div class="auth-logo">Oasis.</div>
+            <p class="auth-tagline">Your social space.</p>
+
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <input type="text" id="auth-username" placeholder="Username">
+            <input type="password" id="auth-password" placeholder="Password (min 6 chars)">
+
+            <div id="bio-field" class="hidden">
+                <input type="text" id="auth-bio" placeholder="Short bio (optional)">
+            </div>
+
+            <button id="auth-submit-btn" class="primary-btn" onclick="handleAuth()">Login</button>
             <div id="auth-error" class="error-text"></div>
         </div>
     </div>
 
+    <!-- ── MAIN APP ── -->
     <div id="app-section" class="screen hidden">
         <nav class="glass-nav">
             <div class="logo">Oasis.</div>
-            <div class="user-badge" id="current-user-display">Loading...</div>
+            <div class="nav-right">
+                <div class="nav-user" onclick="openMyProfile()">
+                    <div id="nav-avatar" class="nav-avatar"></div>
+                    <span id="current-user-display"></span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </nav>
 
         <main class="dashboard-grid">
-            
+
+            <!-- Sidebar -->
             <aside class="sidebar glass-card">
-                <h3>Discover Users</h3>
-                <div id="users-list" class="scrollable-list">
-                    </div>
+                <h3>Discover People</h3>
+                <div id="users-list" class="scrollable-list"></div>
             </aside>
 
+            <!-- Feed -->
             <section class="feed">
+                <!-- Create Post -->
                 <div class="glass-card create-post">
-                    <textarea id="post-content" placeholder="What's on your mind?"></textarea>
-                    <button id="post-btn" class="primary-btn">Publish</button>
+                    <div class="create-post-header">
+                        <div id="create-avatar" class="user-avatar-mini"></div>
+                        <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+                    </div>
+
+                    <!-- Media preview area -->
+                    <div id="media-preview" class="media-preview hidden"></div>
+
+                    <div class="create-post-actions">
+                        <!-- Hidden file input -->
+                        <input type="file" id="post-media-input" accept="image/*,video/*,audio/*" style="display:none" onchange="previewMedia(this)">
+
+                        <div class="media-btns">
+                            <button class="media-pick-btn" onclick="document.getElementById('post-media-input').click()" title="Add Image">
+                                🖼 Photo
+                            </button>
+                            <button class="media-pick-btn" onclick="triggerMediaPicker('video/*')" title="Add Video">
+                                🎬 Video
+                            </button>
+                            <button class="media-pick-btn" onclick="triggerMediaPicker('audio/*')" title="Add Audio">
+                                🎵 Audio
+                            </button>
+                            <button class="media-pick-btn remove-media hidden" id="remove-media-btn" onclick="removeMedia()">
+                                ✕ Remove
+                            </button>
+                        </div>
+
+                        <button class="primary-btn publish-btn" onclick="createPost()">Publish</button>
+                    </div>
                 </div>
 
-                <div id="posts-container">
-                    </div>
+                <div id="posts-container"></div>
             </section>
-
         </main>
+    </div>
+
+    <!-- ── PROFILE MODAL ── -->
+    <div id="profile-modal" class="modal-overlay hidden" onclick="closeProfileOnBg(event)">
+        <div class="modal-content glass-card">
+            <button class="modal-close" onclick="closeProfileModal()">✕</button>
+            <div id="profile-content"></div>
+        </div>
+    </div>
+
+    <!-- ── MEDIA LIGHTBOX ── -->
+    <div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
+        <div class="lightbox-inner">
+            <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+            <img id="lightbox-img" src="" alt="" class="hidden">
+        </div>
     </div>
 
     <script src="app.js"></script>
