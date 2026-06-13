@@ -1,77 +1,120 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oasis — Social Network</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    <title>Space — Your Social Universe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- ── AUTH SCREEN ── -->
     <div id="auth-section" class="screen active">
-        <div class="glass-card auth-card">
-            <div class="auth-logo">Oasis.</div>
-            <p class="auth-tagline">Your social space.</p>
+        <div class="auth-bg">
+            <div class="auth-orb orb1"></div>
+            <div class="auth-orb orb2"></div>
+            <div class="auth-orb orb3"></div>
+        </div>
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span class="logo-icon">✦</span> Space
+            </div>
+            <p class="auth-tagline">Your social universe awaits.</p>
 
             <div class="auth-tabs">
-                <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Login</button>
-                <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
+                <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+                <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Join Space</button>
             </div>
 
-            <input type="text" id="auth-username" placeholder="Username">
-            <input type="password" id="auth-password" placeholder="Password (min 6 chars)">
+            <div class="input-group">
+                <span class="input-icon">👤</span>
+                <input type="text" id="auth-username" placeholder="Username">
+            </div>
+            <div class="input-group">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="auth-password" placeholder="Password (min 6 chars)">
+            </div>
 
             <div id="bio-field" class="hidden">
-                <input type="text" id="auth-bio" placeholder="Short bio (optional)">
+                <div class="input-group">
+                    <span class="input-icon">✏️</span>
+                    <input type="text" id="auth-bio" placeholder="Short bio (optional)">
+                </div>
             </div>
 
-            <button id="auth-submit-btn" class="primary-btn" onclick="handleAuth()">Login</button>
+            <button id="auth-submit-btn" class="primary-btn auth-btn" onclick="handleAuth()">
+                <span>Sign In</span> <span class="btn-arrow">→</span>
+            </button>
             <div id="auth-error" class="error-text"></div>
         </div>
     </div>
 
     <!-- ── MAIN APP ── -->
     <div id="app-section" class="screen hidden">
-        <nav class="glass-nav">
-            <div class="logo">Oasis.</div>
+        <nav class="top-nav">
+            <div class="nav-logo">
+                <span class="logo-icon">✦</span> Space
+            </div>
+            <div class="nav-search">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search the universe…" class="nav-search-input">
+            </div>
             <div class="nav-right">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" id="theme-btn">🌙</button>
                 <div class="nav-user" onclick="openMyProfile()">
                     <div id="nav-avatar" class="nav-avatar"></div>
-                    <span id="current-user-display"></span>
+                    <span id="current-user-display" class="nav-username"></span>
                 </div>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()">Sign out</button>
             </div>
         </nav>
 
         <main class="dashboard-grid">
 
             <!-- Sidebar -->
-            <aside class="sidebar glass-card">
-                <h3>Discover People</h3>
-                <div id="users-list" class="scrollable-list"></div>
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">
+                        <span class="title-dot"></span> People
+                    </h3>
+                    <div id="users-list" class="scrollable-list"></div>
+                </div>
+                <div class="sidebar-section trending">
+                    <h3 class="sidebar-title">
+                        <span class="title-dot orange"></span> Trending
+                    </h3>
+                    <div class="trending-tag">#photography</div>
+                    <div class="trending-tag">#music</div>
+                    <div class="trending-tag">#travel</div>
+                    <div class="trending-tag">#design</div>
+                </div>
             </aside>
 
             <!-- Feed -->
             <section class="feed">
                 <!-- Create Post -->
-                <div class="glass-card create-post">
-                    <div class="create-post-header">
+                <div class="create-post-card">
+                    <div class="create-post-top" onclick="openMyProfile()">
                         <div id="create-avatar" class="user-avatar-mini"></div>
-                        <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+                        <div class="create-user-info">
+                            <span id="create-username" class="create-uname"></span>
+                            <span class="create-usub">View your profile →</span>
+                        </div>
+                    </div>
+                    <div class="create-post-header">
+                        <textarea id="post-content" placeholder="Share something with the universe…"></textarea>
                     </div>
 
-                    <!-- Media preview area -->
                     <div id="media-preview" class="media-preview hidden"></div>
 
                     <div class="create-post-actions">
-                        <!-- Hidden file input -->
                         <input type="file" id="post-media-input" accept="image/*,video/*,audio/*" style="display:none" onchange="previewMedia(this)">
 
                         <div class="media-btns">
                             <button class="media-pick-btn" onclick="document.getElementById('post-media-input').click()" title="Add Image">
-                                🖼 Photo
+                                🖼️ Photo
                             </button>
                             <button class="media-pick-btn" onclick="triggerMediaPicker('video/*')" title="Add Video">
                                 🎬 Video
@@ -84,18 +127,41 @@
                             </button>
                         </div>
 
-                        <button class="primary-btn publish-btn" onclick="createPost()">Publish</button>
+                        <button class="primary-btn publish-btn" onclick="createPost()">
+                            Launch Post 🚀
+                        </button>
                     </div>
                 </div>
 
                 <div id="posts-container"></div>
             </section>
+
+            <!-- Right panel -->
+            <aside class="right-panel">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">
+                        <span class="title-dot purple"></span> Quick Stats
+                    </h3>
+                    <div class="quick-stat">
+                        <span class="qs-label">Your Posts</span>
+                        <span class="qs-value" id="stat-posts">—</span>
+                    </div>
+                    <div class="quick-stat">
+                        <span class="qs-label">Followers</span>
+                        <span class="qs-value" id="stat-followers">—</span>
+                    </div>
+                    <div class="quick-stat">
+                        <span class="qs-label">Following</span>
+                        <span class="qs-value" id="stat-following">—</span>
+                    </div>
+                </div>
+            </aside>
         </main>
     </div>
 
     <!-- ── PROFILE MODAL ── -->
     <div id="profile-modal" class="modal-overlay hidden" onclick="closeProfileOnBg(event)">
-        <div class="modal-content glass-card">
+        <div class="modal-content">
             <button class="modal-close" onclick="closeProfileModal()">✕</button>
             <div id="profile-content"></div>
         </div>

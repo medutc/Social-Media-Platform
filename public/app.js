@@ -1,8 +1,31 @@
-// public/app.js
+
+// Space — app.js  (modernized build)
 const API_URL = '/api';
 let currentUser = null;
-let authToken = null;
-let currentTab = 'login';
+let authToken   = null;
+let currentTab  = 'login';
+
+// ══════════════════════════════════════════════
+//  DARK MODE
+// ══════════════════════════════════════════════
+function initTheme() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeBtn(saved);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeBtn(next);
+}
+
+function updateThemeBtn(theme) {
+    const btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
 
 // ══════════════════════════════════════════════
 //  AUTH
@@ -12,7 +35,10 @@ function switchTab(tab) {
     document.getElementById('tab-login').classList.toggle('active', tab === 'login');
     document.getElementById('tab-register').classList.toggle('active', tab === 'register');
     document.getElementById('bio-field').classList.toggle('hidden', tab === 'login');
-    document.getElementById('auth-submit-btn').textContent = tab === 'login' ? 'Login' : 'Register';
+    const btn = document.getElementById('auth-submit-btn');
+    btn.innerHTML = tab === 'login'
+        ? '<span>Sign In</span><span class="btn-arrow">→</span>'
+        : '<span>Create Account</span><span class="btn-arrow">→</span>';
     document.getElementById('auth-error').textContent = '';
 }
 
@@ -45,7 +71,8 @@ async function handleAuth() {
 
 function logout() {
     authToken = currentUser = null;
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     document.getElementById('app-section').className = 'screen hidden';
     document.getElementById('auth-section').className = 'screen active';
 }
@@ -57,7 +84,6 @@ async function apiFetch(endpoint, method = 'GET', body = null, requireAuth = tru
     const headers = {};
     if (requireAuth && authToken) headers['Authorization'] = `Bearer ${authToken}`;
     if (!isFormData && body)      headers['Content-Type']  = 'application/json';
-
     const options = { method, headers };
     if (body) options.body = isFormData ? body : JSON.stringify(body);
     return fetch(`${API_URL}${endpoint}`, options);
@@ -71,16 +97,34 @@ function enterApp() {
     document.getElementById('app-section').className  = 'screen active';
     document.getElementById('current-user-display').textContent = `@${currentUser.username}`;
     renderNavAvatar();
+    updateQuickStats();
     loadApp();
 }
 
 window.onload = () => {
+    initTheme();
     const t = localStorage.getItem('token');
     const u = localStorage.getItem('user');
     if (t && u) { authToken = t; currentUser = JSON.parse(u); enterApp(); }
 };
 
 function loadApp() { fetchUsers(); fetchPosts(); }
+
+// ══════════════════════════════════════════════
+//  QUICK STATS (right panel)
+// ══════════════════════════════════════════════
+async function updateQuickStats() {
+    if (!currentUser) return;
+    document.getElementById('stat-followers').textContent = currentUser.followers?.length ?? 0;
+    document.getElementById('stat-following').textContent = currentUser.following?.length ?? 0;
+    // Posts count is fetched separately
+    const res = await apiFetch(`/users/${currentUser._id}`);
+    if (res.ok) {
+        const data = await res.json();
+        const el = document.getElementById('stat-posts');
+        if (el) el.textContent = data.posts?.length ?? 0;
+    }
+}
 
 // ══════════════════════════════════════════════
 //  NAV AVATAR
@@ -96,7 +140,6 @@ function renderNavAvatar() {
         el.classList.remove('has-image');
     }
 
-    // Create post avatar
     const ca = document.getElementById('create-avatar');
     if (ca) {
         if (currentUser.profilePicture) {
@@ -107,6 +150,10 @@ function renderNavAvatar() {
             ca.classList.remove('has-image');
         }
     }
+
+    // Populate create-post username label
+    const cu = document.getElementById('create-username');
+    if (cu) cu.textContent = `@${currentUser.username}`;
 }
 
 // ══════════════════════════════════════════════
@@ -122,12 +169,11 @@ async function fetchUsers() {
     users.forEach(user => {
         if (user._id === currentUser._id) return;
         const isFollowing = isUserFollowed(user._id);
-
         const div = document.createElement('div');
         div.className = 'user-item';
         div.innerHTML = `
             <div class="user-info-mini" onclick="openProfile('${user._id}')">
-                ${avatarHtml(user, 38)}
+                ${avatarHtml(user, 36)}
                 <div>
                     <div class="uname">@${user.username}</div>
                     <div class="usub">${user.followers?.length || 0} followers</div>
@@ -135,7 +181,7 @@ async function fetchUsers() {
             </div>
             <button class="follow-btn ${isFollowing ? 'following' : ''}"
                     onclick="toggleFollow('${user._id}', this)">
-                ${isFollowing ? 'Following' : 'Follow'}
+                ${isFollowing ? '✓' : '+'}
             </button>`;
         list.appendChild(div);
     });
@@ -158,7 +204,10 @@ async function fetchPosts() {
     cont.innerHTML = '';
 
     if (!posts.length) {
-        cont.innerHTML = `<p class="empty-feed">No posts yet. Be the first! 🚀</p>`;
+        cont.innerHTML = `<div class="empty-feed">
+            <div style="font-size:2.4rem;margin-bottom:10px">🚀</div>
+            <p>No posts yet. Be the first to launch something into Space!</p>
+        </div>`;
         return;
     }
     posts.forEach(p => renderPost(p, cont));
@@ -176,7 +225,7 @@ function renderPost(post, container) {
     card.innerHTML = `
         <div class="post-header">
             <div class="post-author-info" onclick="openProfile('${post.author._id}')">
-                ${avatarHtml(post.author, 40)}
+                ${avatarHtml(post.author, 42)}
                 <div>
                     <div class="post-username">@${post.author.username}</div>
                     <div class="post-time">${formatTime(post.createdAt)}</div>
@@ -186,16 +235,16 @@ function renderPost(post, container) {
         </div>
 
         ${post.content ? `<div class="post-body">${escapeHtml(post.content)}</div>` : ''}
-
         ${renderMedia(post.media)}
 
         <div class="post-actions">
             <button class="action-btn ${isLiked ? 'liked' : ''}"
                     id="like-btn-${post._id}"
                     onclick="toggleLike('${post._id}', this)">
-                ${isLiked ? '❤️' : '🤍'} <span id="like-count-${post._id}">${post.likes?.length || 0}</span> Likes
+                ${isLiked ? '❤️' : '🤍'} <span id="like-count-${post._id}">${post.likes?.length || 0}</span>
             </button>
-            <span class="action-btn">💬 ${post.comments?.length || 0} Comments</span>
+            <button class="action-btn">💬 ${post.comments?.length || 0}</button>
+            <button class="action-btn" onclick="sharePost('${post._id}')">↗ Share</button>
         </div>
 
         <div class="comments-section">
@@ -211,15 +260,37 @@ function renderPost(post, container) {
             </div>
             <div class="comment-input-wrapper">
                 <input type="text" id="comment-input-${post._id}"
-                       placeholder="Write a comment…"
+                       placeholder="Add a comment…"
                        onkeydown="if(event.key==='Enter') addComment('${post._id}')">
-                <button class="reply-btn" onclick="addComment('${post._id}')">Reply</button>
+                <button class="reply-btn" onclick="addComment('${post._id}')">Send</button>
             </div>
         </div>`;
     container.appendChild(card);
 }
 
-// Render media (image / video / audio) with download button
+function sharePost(postId) {
+    const url = `${window.location.origin}/post/${postId}`;
+    if (navigator.share) {
+        navigator.share({ title: 'Check this out on Space', url });
+    } else {
+        navigator.clipboard.writeText(url).then(() => showToast('Link copied! 🚀'));
+    }
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = `
+        position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+        background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+        padding:10px 22px;border-radius:30px;font-weight:600;font-size:.9rem;
+        z-index:9999;box-shadow:0 8px 24px rgba(99,102,241,.4);
+        animation:slideUp .3s ease;pointer-events:none;
+    `;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2800);
+}
+
 function renderMedia(media) {
     if (!media?.url) return '';
     const filename = media.originalName || 'download';
@@ -265,9 +336,9 @@ function triggerMediaPicker(accept) {
 function previewMedia(input) {
     const file = input.files[0];
     if (!file) return;
-    const preview = document.getElementById('media-preview');
+    const preview   = document.getElementById('media-preview');
     const removeBtn = document.getElementById('remove-media-btn');
-    const url = URL.createObjectURL(file);
+    const url  = URL.createObjectURL(file);
     const type = file.type.split('/')[0];
 
     let html = '';
@@ -281,13 +352,11 @@ function previewMedia(input) {
 }
 
 function removeMedia() {
-    const input = document.getElementById('post-media-input');
+    document.getElementById('post-media-input').value = '';
     const preview = document.getElementById('media-preview');
-    const removeBtn = document.getElementById('remove-media-btn');
-    input.value = '';
     preview.innerHTML = '';
     preview.classList.add('hidden');
-    removeBtn.classList.add('hidden');
+    document.getElementById('remove-media-btn').classList.add('hidden');
 }
 
 // ══════════════════════════════════════════════
@@ -296,11 +365,7 @@ function removeMedia() {
 async function createPost() {
     const content = document.getElementById('post-content').value.trim();
     const file    = document.getElementById('post-media-input').files[0];
-
-    if (!content && !file) {
-        alert('Add a caption or select a media file.');
-        return;
-    }
+    if (!content && !file) { showToast('Add a caption or media file first!'); return; }
 
     const formData = new FormData();
     if (content) formData.append('content', content);
@@ -311,6 +376,7 @@ async function createPost() {
         document.getElementById('post-content').value = '';
         removeMedia();
         fetchPosts();
+        showToast('Post launched into Space 🚀');
     }
 }
 
@@ -318,9 +384,9 @@ async function createPost() {
 //  DELETE POST
 // ══════════════════════════════════════════════
 window.deletePost = async function(postId) {
-    if (!confirm('Delete this post?')) return;
+    if (!confirm('Delete this post from Space?')) return;
     const res = await apiFetch(`/posts/${postId}`, 'DELETE');
-    if (res.ok) document.getElementById(`post-${postId}`)?.remove();
+    if (res.ok) { document.getElementById(`post-${postId}`)?.remove(); showToast('Post deleted'); }
 };
 
 // ══════════════════════════════════════════════
@@ -333,15 +399,16 @@ window.toggleFollow = async function(targetUserId, btn) {
     currentUser = data.currentUser;
     localStorage.setItem('user', JSON.stringify(currentUser));
     const nowFollowing = data.message === 'Followed';
-    btn.textContent = nowFollowing ? 'Following' : 'Follow';
+    btn.textContent = nowFollowing ? '✓' : '+';
     btn.classList.toggle('following', nowFollowing);
+    updateQuickStats();
 };
 
 window.toggleLike = async function(postId, btn) {
     const res = await apiFetch(`/posts/${postId}/like`, 'PUT');
     if (!res.ok) return;
     const data = await res.json();
-    btn.innerHTML = `${data.isLiked ? '❤️' : '🤍'} <span id="like-count-${postId}">${data.likesCount}</span> Likes`;
+    btn.innerHTML = `${data.isLiked ? '❤️' : '🤍'} <span id="like-count-${postId}">${data.likesCount}</span>`;
     btn.classList.toggle('liked', data.isLiked);
 };
 
@@ -359,18 +426,17 @@ window.addComment = async function(postId) {
 window.openProfile = async function(userId) {
     const modal   = document.getElementById('profile-modal');
     const content = document.getElementById('profile-content');
-    content.innerHTML = '<p class="loading-text">Loading profile…</p>';
+    content.innerHTML = '<p class="loading-text">Loading profile… ✦</p>';
     modal.classList.remove('hidden');
 
     const res = await apiFetch(`/users/${userId}`);
-    if (!res.ok) { content.innerHTML = '<p>Error loading profile.</p>'; return; }
+    if (!res.ok) { content.innerHTML = '<p class="loading-text">Error loading profile.</p>'; return; }
 
     const { user, posts } = await res.json();
     const isMe        = user._id === currentUser._id;
     const isFollowing = isUserFollowed(user._id);
 
     content.innerHTML = `
-        <!-- Profile Header -->
         <div class="profile-header">
             <div class="profile-avatar-wrap">
                 ${profileAvatarHtml(user)}
@@ -399,7 +465,7 @@ window.openProfile = async function(userId) {
             ${isMe ? `
                 <div class="edit-bio-form">
                     <input type="text" id="edit-bio-input" value="${escapeHtml(user.bio || '')}" placeholder="Update your bio…">
-                    <button class="primary-btn" style="width:auto" onclick="updateBio()">Save</button>
+                    <button class="primary-btn" style="width:auto;padding:10px 18px" onclick="updateBio()">Save</button>
                 </div>` : `
                 <button class="follow-btn ${isFollowing ? 'following' : ''} profile-follow-btn"
                         onclick="toggleFollowProfile('${user._id}', this)">
@@ -407,17 +473,15 @@ window.openProfile = async function(userId) {
                 </button>`}
         </div>
 
-        <!-- Tabs -->
         <div class="profile-tabs">
             <button class="ptab-btn active" onclick="showTab('posts-tab-${user._id}')">Posts</button>
             <button class="ptab-btn" onclick="showTab('followers-tab-${user._id}')">Followers</button>
             <button class="ptab-btn" onclick="showTab('following-tab-${user._id}')">Following</button>
         </div>
 
-        <!-- Posts Tab -->
-        <div id="posts-tab-${user._id}" class="ptab-content active">
+        <div id="posts-tab-${user._id}" class="ptab-content">
             ${posts.length === 0
-                ? '<p class="empty-tab">No posts yet.</p>'
+                ? '<p class="empty-tab">No posts yet 🚀</p>'
                 : posts.map(p => `
                     <div class="profile-post-card">
                         ${p.media?.url ? `
@@ -429,60 +493,44 @@ window.openProfile = async function(userId) {
                                         : `<audio src="${p.media.url}" controls></audio>`}
                             </div>` : ''}
                         ${p.content ? `<p class="profile-post-caption">${escapeHtml(p.content)}</p>` : ''}
-                        <div class="profile-post-meta">
-                            ❤️ ${p.likes?.length || 0} · 💬 ${p.comments?.length || 0} · ${formatTime(p.createdAt)}
-                        </div>
+                        <div class="profile-post-meta">❤️ ${p.likes?.length || 0} · 💬 ${p.comments?.length || 0} · ${formatTime(p.createdAt)}</div>
                     </div>`).join('')}
         </div>
 
-        <!-- Followers Tab -->
         <div id="followers-tab-${user._id}" class="ptab-content hidden">
             ${(user.followers?.length || 0) === 0
                 ? '<p class="empty-tab">No followers yet.</p>'
                 : user.followers.map(f => `
                     <div class="user-list-row" onclick="openProfile('${f._id}'); closeProfileModal();">
                         ${avatarHtml(f, 40)}
-                        <div>
-                            <div class="uname">@${f.username}</div>
-                        </div>
+                        <div><div class="uname">@${f.username}</div></div>
                     </div>`).join('')}
         </div>
 
-        <!-- Following Tab -->
         <div id="following-tab-${user._id}" class="ptab-content hidden">
             ${(user.following?.length || 0) === 0
                 ? '<p class="empty-tab">Not following anyone yet.</p>'
                 : user.following.map(f => `
                     <div class="user-list-row" onclick="openProfile('${f._id}'); closeProfileModal();">
                         ${avatarHtml(f, 40)}
-                        <div>
-                            <div class="uname">@${f.username}</div>
-                        </div>
+                        <div><div class="uname">@${f.username}</div></div>
                     </div>`).join('')}
         </div>`;
 };
 
 window.showTab = function(tabId) {
-    // Hide all ptab-contents in the modal
     document.querySelectorAll('.ptab-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.ptab-btn').forEach(el => el.classList.remove('active'));
-    // Show target
     const target = document.getElementById(tabId);
     if (target) target.classList.remove('hidden');
-    // Activate corresponding button
     const idx = tabId.includes('posts') ? 0 : tabId.includes('followers') ? 1 : 2;
     const btns = document.querySelectorAll('.ptab-btn');
     if (btns[idx]) btns[idx].classList.add('active');
 };
 
 window.openMyProfile = function() { openProfile(currentUser._id); };
-
-window.closeProfileOnBg = function(e) {
-    if (e.target.id === 'profile-modal') closeProfileModal();
-};
-window.closeProfileModal = function() {
-    document.getElementById('profile-modal').classList.add('hidden');
-};
+window.closeProfileOnBg = function(e) { if (e.target.id === 'profile-modal') closeProfileModal(); };
+window.closeProfileModal = function() { document.getElementById('profile-modal').classList.add('hidden'); };
 
 window.toggleFollowProfile = async function(targetId, btn) {
     const res = await apiFetch('/users/follow', 'POST', { targetUserId: targetId });
@@ -494,6 +542,7 @@ window.toggleFollowProfile = async function(targetId, btn) {
     btn.textContent = nowFollowing ? '✓ Following' : '+ Follow';
     btn.classList.toggle('following', nowFollowing);
     fetchUsers();
+    updateQuickStats();
 };
 
 // ══════════════════════════════════════════════
@@ -503,14 +552,14 @@ window.uploadProfilePicture = async function(file) {
     if (!file) return;
     const formData = new FormData();
     formData.append('profilePicture', file);
-
     const res = await apiFetch('/users/profile/picture', 'PUT', formData, true, true);
     if (res.ok) {
         const updated = await res.json();
         currentUser.profilePicture = updated.profilePicture;
         localStorage.setItem('user', JSON.stringify(currentUser));
         renderNavAvatar();
-        openProfile(currentUser._id); // refresh profile modal
+        openProfile(currentUser._id);
+        showToast('Profile picture updated ✨');
     }
 };
 
@@ -525,16 +574,17 @@ async function updateBio() {
         currentUser.bio = updated.bio;
         localStorage.setItem('user', JSON.stringify(currentUser));
         openProfile(currentUser._id);
+        showToast('Bio updated ✨');
     }
 }
 
 // ══════════════════════════════════════════════
-//  LIGHTBOX (image preview)
+//  LIGHTBOX
 // ══════════════════════════════════════════════
 window.openLightbox = function(src) {
-    const lb = document.getElementById('lightbox');
+    const lb  = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
-    img.src = src;
+    img.src   = src;
     img.classList.remove('hidden');
     lb.classList.remove('hidden');
 };
@@ -548,7 +598,7 @@ window.closeLightbox = function() {
 // ══════════════════════════════════════════════
 function avatarHtml(user, size = 36) {
     if (!user) return '';
-    const fontSize = Math.round(size * 0.4);
+    const fontSize = Math.round(size * 0.38);
     if (user.profilePicture) {
         return `<img src="${user.profilePicture}" class="user-avatar-mini has-image"
                      style="width:${size}px;height:${size}px" alt="${user.username}" loading="lazy">`;
